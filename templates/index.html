@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Learning Assistant</title>
+
+    <style>
+        /* Basic styling for the page layout */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* Container to center content */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Input textarea styling */
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 6px;
+        }
+
+        /* Button styling */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff6600;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Section titles */
+        h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #444;
+        }
+
+        /* Organized list structure */
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+
+        /* Header styling */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        /* Loader styling */
+        #loading {
+            display: none;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #learning-path {
+            max-width: 100%;
+            overflow-wrap: break-word; /* Ensures long words wrap */
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div class="header">
+        <img src="https://images.squarespace-cdn.com/content/v1/670f7d9e7e8f1b00bc039e3d/8d45dd1a-11bc-4b55-b6a1-17646d698878/logo+wide+white+on+transparent.png?format=1500w" alt="Logo">
+        <h1>GPT Learning Assistant</h1>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="container">
+        <!-- User Input Form -->
+        <form action="/generate" method="POST" id="prompt-form">
+            <label for="prompt">Enter your topic or query:</label><br>
+            <textarea id="prompt" name="prompt" rows="4" cols="50" placeholder="Type your request here..."></textarea><br><br>
+            <button type="submit">Submit</button>
+        </form>
+
+        <!-- Loading indicator -->
+        <p id="loading">Processing... please wait.</p>
+
+        <!-- Tags Display -->
+        <h2>Useful Tags:</h2>
+        <ul id="tags-list"></ul>
+
+        <!-- Learning Path Display -->
+        <h2>Learning Path:</h2>
+        <div id="learning-path"></div>
+
+        <!-- Course Materials Section -->
+        <h2>Materials:</h2>
+        <div id="materials-section"></div>
+    </div>
+
+    <script>
+        document.getElementById("prompt-form").onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+    
+            try {
+                const response = await fetch("/generate", {
+                    method: "POST",
+                    body: new URLSearchParams(formData)
+                });
+    
+                const data = await response.json();
+    
+                console.log("API Response:", data); // Debugging log to verify correct data reception
+    
+                // Clear the prompt text box after submission
+                document.getElementById("prompt").value = "";
+
+                // Clear each section before updating to prevent overlapping content
+                document.getElementById("tags-list").innerHTML = "";
+                document.getElementById("learning-path").innerHTML = "";
+                document.getElementById("materials-section").innerHTML = "";
+    
+                // Update useful tags section if tags exist
+                const tagsList = document.getElementById("tags-list");
+                if (data.tags && data.tags.length > 0) {
+                    data.tags.forEach(tag => {
+                        const li = document.createElement("li");
+                        li.textContent = tag;
+                        tagsList.appendChild(li);
+                    });
+                } else {
+                    tagsList.innerHTML = "<p>No tags generated.</p>";
+                }
+    
+                // Ensure learning path is placed correctly and retains API formatting
+                const learningPathSection = document.getElementById("learning-path");
+                learningPathSection.innerHTML = ""; // Clear previous entries
+    
+                if (data.learning_path && data.learning_path.trim() !== "") {
+                    console.log("Learning Path Received:", data.learning_path); // Debugging log
+    
+                    // Inject API response directly without modifying its structure
+                    learningPathSection.innerHTML = `<pre>${data.learning_path}</pre>`;
+                } else {
+                    learningPathSection.innerHTML = "<p>No learning path provided.</p>";
+                }
+    
+                // Update materials section with clickable buttons for course access
+                const materialsSection = document.getElementById("materials-section");
+                if (data.courses && data.courses.length > 0 && data.courses[0].link) {
+                    data.courses.forEach(course => {
+                        if (course.link) {
+                            const button = document.createElement("button");
+                            button.textContent = `Access: ${course.name}`;
+                            button.style.padding = "10px";
+                            button.style.margin = "5px";
+                            button.style.backgroundColor = "#ff6600";
+                            button.style.color = "#fff";
+                            button.style.border = "none";
+                            button.style.borderRadius = "4px";
+                            button.style.cursor = "pointer";
+    
+                            button.onclick = function() {
+                                window.open(course.link, "_blank"); // Opens story.html in new tab
+                            };
+    
+                            materialsSection.appendChild(button);
+                        }
+                    });
+                } else {
+                    materialsSection.innerHTML = "<p>No materials available for your search.</p>";
+                }
+    
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+    </script>
+</body>
+</html>
