@@ -10,8 +10,8 @@ app = Flask(__name__)
 
 # OpenAI client setup for generating tags
 client = OpenAI(
-    base_url="https://api.aimlapi.com/v1",  # API base URL
-    api_key="93ed558e73cc4b5e8d145b83ef7ed670" # API key
+    base_url="----",  # API base URL
+    api_key="----" # API key
 )
 
 # Function to call GPT API for tag generation
